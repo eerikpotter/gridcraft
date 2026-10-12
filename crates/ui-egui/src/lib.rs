@@ -104,6 +104,8 @@ pub struct SheetView {
 /// Host services the platform shell provides (file pickers, opening URLs).
 #[derive(Default)]
 pub struct Services {
+    /// Optional browser-host extension to the File menu.
+    pub file_menu: Option<Box<dyn Fn(&mut egui::Ui, bool)>>,
     pub pick_open: Option<Box<dyn Fn() -> Option<String>>>,
     pub pick_save: Option<Box<dyn Fn(&str) -> Option<String>>>,
     /// Native picture picker (PNG/JPEG), separate from workbook opening.

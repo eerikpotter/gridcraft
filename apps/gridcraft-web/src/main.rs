@@ -11,6 +11,9 @@
 //! URL query flags: `?webgl` forces WebGL2; `?sample=sales|budget|grades` opens a sample.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
+#[cfg(feature = "icp-cloud")]
+mod cloud;
+
 #[cfg(target_arch = "wasm32")]
 mod web;
 

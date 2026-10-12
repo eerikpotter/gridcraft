@@ -48,7 +48,19 @@ pub fn start() {
                         app.ui.language = browser;
                     }
                     SheetApp::setup_context_for_language(&cc.egui_ctx, false, app.ui.language);
-                    Ok(Box::new(WebShell { app, inbox }))
+                    #[cfg(feature = "icp-cloud")]
+                    let cloud = {
+                        let cloud = sovereign_cloud_ui::Cloud::new(sovereign_cloud_ui::AppSpec::GRID, cc.egui_ctx.clone());
+                        let menu = cloud.menu_handle();
+                        app.services.file_menu = Some(Box::new(move |ui, has_doc| menu.ui(ui, has_doc)));
+                        cloud
+                    };
+                    Ok(Box::new(WebShell {
+                        app,
+                        inbox,
+                        #[cfg(feature = "icp-cloud")]
+                        cloud,
+                    }))
                 }),
             )
             .await;
@@ -66,8 +78,19 @@ fn query() -> String {
 }
 
 struct WebShell {
+    #[cfg(feature = "icp-cloud")]
+    cloud: sovereign_cloud_ui::Cloud,
     app: SheetApp,
     inbox: Inbox,
+}
+
+fn publish_dirty_state(dirty: bool) {
+    if let Some(root) = web_sys::window().and_then(|w| w.document()).and_then(|d| d.document_element()) {
+        let value = if dirty { "true" } else { "false" };
+        if root.get_attribute("data-craft-dirty").as_deref() != Some(value) {
+            let _ = root.set_attribute("data-craft-dirty", value);
+        }
+    }
 }
 
 impl eframe::App for WebShell {
@@ -88,6 +111,9 @@ impl eframe::App for WebShell {
             });
         }
         self.app.logic(ctx);
+        publish_dirty_state(
+            self.app.editor.is_some() || self.app.text_box_editor.is_some() || self.app.session.documents().iter().any(|d| d.is_dirty()),
+        );
     }
 
     fn raw_input_hook(&mut self, _ctx: &egui::Context, raw: &mut egui::RawInput) {
@@ -96,6 +122,17 @@ impl eframe::App for WebShell {
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.app.ui(ui);
+        #[cfg(feature = "icp-cloud")]
+        {
+            if self.cloud.menu_handle().has_pending() {
+                // Use the editor's own validation/commit path for a cell still being typed.
+                self.app.commit_edit(0, 0, false, false);
+            }
+            self.cloud.ui(ui.ctx(), &mut crate::cloud::Adapter(&mut self.app));
+        }
+        publish_dirty_state(
+            self.app.editor.is_some() || self.app.text_box_editor.is_some() || self.app.session.documents().iter().any(|d| d.is_dirty()),
+        );
     }
 }
 

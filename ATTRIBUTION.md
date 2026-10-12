@@ -42,3 +42,5 @@ Generated-in-code art is original and has no file to list: the UI icon set (`cra
 | `docs/images/pivot.png` | GridCraft contributors | screenshot of GridCraft rendered offscreen (`crates/ui-egui/examples/snapshot.rs`) showing an original sample workbook | MIT OR Apache-2.0 | README screenshot; no third-party content |
 | `docs/images/format-chart.png` | GridCraft contributors | screenshot of GridCraft rendered offscreen (`crates/ui-egui/examples/snapshot.rs`) showing an original sample workbook | MIT OR Apache-2.0 | README screenshot; no third-party content |
 | `docs/images/page-break.png` | GridCraft contributors | screenshot of GridCraft rendered offscreen (`crates/ui-egui/examples/snapshot.rs`) showing an original sample workbook | MIT OR Apache-2.0 | README screenshot; no third-party content |
+
+| `vendor/sovereign-cloud-ui/assets/icp/logo.svg` | DFINITY Foundation | [Developer documentation, pinned source](https://github.com/dfinity/developer-docs/blob/2e48927666fb50d15a5c874aca4b64f50e584708/public/favicon.svg) | Apache-2.0 (adjacent LICENSE) | Shared cloud UI integration mark |

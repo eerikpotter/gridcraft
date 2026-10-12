@@ -233,6 +233,9 @@ fn file_menu(app: &mut SheetApp, ui: &mut Ui) {
                 ui.close();
             }
         }
+        if let Some(menu) = &app.services.file_menu {
+            menu(ui, app.session.active().is_some());
+        }
     });
 }
 
