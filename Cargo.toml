@@ -5,7 +5,7 @@ exclude = ["vendor/sovereign-cloud", "vendor/sovereign-cloud-ui"]
 default-members = ["crates/*", "apps/gridcraft", "apps/gridcraft-cli", "xtask"]
 
 [workspace.package]
-version = "0.5.0"
+version = "0.6.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.90"
@@ -35,6 +35,10 @@ rayon = "1"
 regex = { version = "1", default-features = false, features = ["std", "unicode", "perf"] }
 quick-xml = "0.41"
 zip = { version = "3", default-features = false, features = ["deflate"] }
+sha2 = { version = "0.11", default-features = false }
+# Decrypting password-protected workbooks ([MS-OFFCRYPTO]): AES and SHA-1, pure Rust (wasm-safe).
+aes = { version = "0.9", default-features = false }
+sha1 = { version = "0.11", default-features = false }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 
 # ui
@@ -49,6 +53,8 @@ sys-locale = "0.3"
 # Font parser egui's epaint uses; the UI validates system font files with it before handing them
 # to egui, which panics on a file it can't parse. Same version as epaint's, so no second copy.
 skrifa = { version = "0.44", default-features = false, features = ["std"] }
+# Real font bytes for tests (Ubuntu Light, compiled into epaint).
+epaint_default_fonts = "0.36"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

@@ -83,7 +83,8 @@ impl Scan<'_> {
                 let child = self.expr(x, sheet, array_context, depth + 1);
                 match op {
                     UnOp::At => Shape { array: false, affected: child.affected },
-                    UnOp::Spill => Shape { array: true, affected: child.affected },
+                    // A trim reference is a reference operator, like `:`.
+                    UnOp::Spill | UnOp::Trim(_) => Shape { array: true, affected: child.affected },
                     _ => Shape { array: child.array, affected: child.affected || (child.array && !array_context) },
                 }
             }
@@ -218,6 +219,9 @@ fn scalar_arg(name: &str, i: usize) -> bool {
         "FILTER" | "SORTBY" => i > 1,
         "SORT" | "UNIQUE" | "TAKE" | "DROP" | "CHOOSECOLS" | "CHOOSEROWS" | "TOROW" | "TOCOL" | "WRAPROWS" | "WRAPCOLS" | "EXPAND" => i != 0,
         "LINEST" | "LOGEST" | "TREND" | "GROWTH" => i > 1,
+        "FORECAST" | "FORECAST.LINEAR" => i == 0,
+        "FORECAST.ETS" | "FORECAST.ETS.CONFINT" => i != 1 && i != 2,
+        "FORECAST.ETS.SEASONALITY" | "FORECAST.ETS.STAT" => i > 1,
         _ => true,
     }
 }

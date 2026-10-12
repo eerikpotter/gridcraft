@@ -83,7 +83,7 @@ pub fn rich_text(e: &El) -> String {
 }
 
 /// Converts input bytes to UTF-8 XML text (handles BOMs and UTF-16).
-fn to_utf8(xml: &[u8]) -> std::borrow::Cow<'_, [u8]> {
+pub(crate) fn to_utf8(xml: &[u8]) -> std::borrow::Cow<'_, [u8]> {
     if let Some(rest) = xml.strip_prefix(&[0xEF, 0xBB, 0xBF]) {
         return std::borrow::Cow::Borrowed(rest);
     }

@@ -122,6 +122,82 @@ fn fractions() {
     assert_eq!(f("# ???/???", 0.5), "   1/2  ");
 }
 
+/// Fraction sections with literal text, as Excel renders them (observed `TEXT()` results).
+#[test]
+fn fractions_with_literals() {
+    let cases: &[(&str, f64, &str)] = &[
+        // Literals between the parts and around the bar.
+        (r"|#\:#/#|", 23.75, "|23:3/4|"),
+        (r"|#\:#=/=#|", 23.75, "|23:3=/=4|"),
+        (r"|#\:#=/=#|", -23.75, "-|23:3=/=4|"),
+        (r"|#\:? ?=/=#|", 23.75, "|2:3 3=/=4|"),
+        (r"|#-#-#\:#/#|", 23.75, "|-2-3:3/4|"),
+        // A whole part without digits drops its separator (spaces next to a `?`).
+        (r"|#\:#/#|", 0.75, "|3/4|"),
+        (r"|#\:#/#|", -0.75, "-|3/4|"),
+        (r"|#-#-#\:#/#|", 0.75, "|--3/4|"),
+        (r"|#\:#=/=#|", 0.75, "|3=/=4|"),
+        (r"|#\:0=/=?|", 0.75, "|3=/=4|"),
+        (r"|#\:?=/=#|", 0.75, "| 3=/=4|"),
+        (r"|?\:#=/=#|", 0.75, "|  3=/=4|"),
+        (r"|?\:0=/=0|", -0.75, "-|  3=/=4|"),
+        (r"|?\:?0=/=#|", 0.75, "|   3=/=4|"),
+        (r"|0\:#=/=#|", 0.75, "|0:3=/=4|"),
+        // A zero fraction hides separator, numerator, bar and denominator (spaces if any `?`).
+        (r"|#\:#/#|", 0.0, "|0|"),
+        (r"|#\:#/#|", 1.0, "|1|"),
+        (r"|#\:#/#|", -1.0, "-|1|"),
+        (r"|#-#-#\:#/#|", 0.0, "|--0|"),
+        (r"|#-#-#\:#/#|", 1.0, "|--1|"),
+        (r"|#\:#=/=0|", 0.0, "|0|"),
+        (r"|0\:#=/=#|", 1.0, "|1|"),
+        (r"|#\:#=/=?|", 0.0, "|0      |"),
+        (r"|#\:?=/=0|", 1.0, "|1      |"),
+        (r"|?\:#=/=#|", 0.0, "|0      |"),
+        (r"|?\:#=/=#|", -1.0, "-|1      |"),
+        (r"|#\:? ?=/=#|", 0.0, "|:0      |"),
+        (r"|#\:? ?=/=?|", 1.0, "|:1      |"),
+        // ... unless the numerator has a `0` placeholder: then it shows 0/1.
+        (r"|#\:0=/=#|", 0.0, "|0=/=1|"),
+        (r"|?\:0=/=?|", 0.0, "|0:0=/=1|"),
+        (r"|0\:0=/=0|", 0.0, "|0:0=/=1|"),
+        (r"|#\:0=/=#|", 1.0, "|1:0=/=1|"),
+        (r"|?\:0=/=#|", -1.0, "-|1:0=/=1|"),
+        (r"|#\:? ?0#/000", 0.0, "|:0  00/001"),
+        (r"|#\:? ?0#/000", 1.0, "|:1  00/001"),
+        // `0` denominator placeholders zero pad on the left.
+        (r"|#\:? ?0#/000", 23.75, "|2:3  03/004"),
+        (r"|#\:? ?#/#|", 23.75, "|2:3  3/4|"),
+        // Literal text before the bar: still an improper fraction.
+        (r"|#_#/#|", 3.75, "|15 /4|"),
+        (r"|#_#/#|", -0.75, "-|3 /4|"),
+        (r"|#_#/#|", 0.0, "|0 /1|"),
+        (r"|#_#/#|", -1.0, "-|1 /1|"),
+        (r"|#_#=/=?|", 3.75, "|15 =/=4|"),
+        (r"|#_?=/=0|", 0.0, "|0 =/=1|"),
+        (r"|#_?=/=?|", 1.0, "|1 =/=1|"),
+    ];
+    for &(code, v, want) in cases {
+        assert_eq!(f(code, v), want, "{code} with {v}");
+    }
+}
+
+#[test]
+fn question_mark_pads_thousands_separator() {
+    let cases: &[(&str, f64, &str)] = &[
+        ("?,???????", 1234567.0, " 1,234,567"),
+        ("?,????????", 1234567.0, "  1,234,567"),
+        ("?,?????????", 1234567.0, "    1,234,567"),
+        ("?,?????????", -1234567.0, "-    1,234,567"),
+        ("?,??????", 1234567.0, "1,234,567"),
+        ("?,????", 12345.0, "12,345"),
+        ("0,000000000", 1234567.0, "0,001,234,567"),
+    ];
+    for &(code, v, want) in cases {
+        assert_eq!(f(code, v), want, "{code} with {v}");
+    }
+}
+
 #[test]
 fn literals_and_fill() {
     assert_eq!(f("\"$\"#,##0.00", 3.0), "$3.00");
@@ -264,6 +340,21 @@ fn text_fn() {
     assert_eq!(text_function(&Value::Number(5.0), "", S), Ok("".into()));
     assert_eq!(text_function(&Value::Number(-1.0), "m/d/yyyy", S), Err(CellError::Value));
     assert_eq!(text_function(&Value::Bool(true), "0", S), Ok("TRUE".into()));
+    // Booleans go through the text section as TRUE/FALSE (observed Excel results).
+    let cases: &[(bool, &str, &str)] = &[
+        (true, ";;;@", "TRUE"),
+        (true, ";;;\"hi\"", "hi"),
+        (true, ";;;\"h\"\"I\"", "hI"),
+        (false, ";;;\\h\\i", "hi"),
+        (true, ";;;\\@@\\@", "@TRUE@"),
+        (false, ";;;-@-", "-FALSE-"),
+        (true, ";;;@-", "TRUE-"),
+        (false, ";;;-@-@-", "-FALSE-FALSE-"),
+        (true, "0.00", "TRUE"),
+    ];
+    for &(b, code, want) in cases {
+        assert_eq!(text_function(&Value::Bool(b), code, S), Ok(want.into()), "{code} with {b}");
+    }
 }
 
 /// Deterministic xorshift for fuzzing.
