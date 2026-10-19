@@ -69,3 +69,11 @@ rpm, tarball), FreeBSD, and web (WASM; WebGPU or WebGL2). Release workflows in
 | Date | Change | Summary |
 |---|---|---|
 | 2026-10-10 | major | Created from the code on main: crates, layers, data flow, agent control, known gaps |
+
+### Subnet host identity (19 October 2026)
+
+The browser cloud adapter supplies the authenticated account's opaque `user_id`
+and Subnet account display name through `Editor::set_user_profile`. The ID is runtime context only: it is
+cleared on logout/session changes and excluded from persisted preferences. Engine
+code has no ICP dependency, and opening someone else's file does not change the
+active user. The account name overrides local author-name preferences while signed in. This hook does not yet persist author IDs in comments or change author matching.

@@ -190,6 +190,9 @@ pub struct Prefs {
     /// After pressing Enter, move the selection: "down", "right", "up", "left", "none".
     pub enter_direction: String,
     pub autocomplete: bool,
+    /// Active host account, independent of the editable display name. Never persisted.
+    #[serde(skip)]
+    pub user_id: Option<String>,
     pub user_name: String,
     pub default_font: String,
     pub default_font_size: f32,
@@ -206,6 +209,7 @@ impl Default for Prefs {
         Prefs {
             enter_direction: "down".into(),
             autocomplete: true,
+            user_id: None,
             user_name: "GridCraft User".into(),
             default_font: gridcraft_model::DEFAULT_FONT.into(),
             default_font_size: gridcraft_model::DEFAULT_FONT_SIZE,

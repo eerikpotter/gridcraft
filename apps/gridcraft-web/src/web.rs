@@ -121,6 +121,8 @@ fn publish_dirty_state(dirty: bool) {
 
 impl eframe::App for WebShell {
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        #[cfg(feature = "icp-cloud")]
+        self.cloud.sync_identity(&mut crate::cloud::Adapter(&mut self.app));
         let dropped = ctx.input_mut(|i| std::mem::take(&mut i.raw.dropped_files));
         for f in dropped {
             let inbox = self.inbox.clone();
@@ -147,6 +149,8 @@ impl eframe::App for WebShell {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        #[cfg(feature = "icp-cloud")]
+        self.cloud.sync_identity(&mut crate::cloud::Adapter(&mut self.app));
         self.app.ui(ui);
         #[cfg(feature = "icp-cloud")]
         {
